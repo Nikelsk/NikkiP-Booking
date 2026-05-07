@@ -656,7 +656,7 @@ async function doBook() {
   const fd = new FormData();
   fd.append('access_key', WEB3FORMS_KEY);
   fd.append('subject',    `Meeting Request: ${co} | ND - ${pu}`);
-  fd.append('from_name',  nm);
+  fd.append('from_name',  'Custom Booking Request');
   fd.append('email',      em);   // customer's email becomes the reply-to
   fd.append('message',    msgBody);
 
