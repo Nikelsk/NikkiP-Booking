@@ -21,7 +21,6 @@
   --success:     #107c10;
   --avail-bg:    #f3e8ff;
   --avail-brd:   #7c3aed;
-  --slot-h:      38px;
   --r:           10px;
   --r-sm:        6px;
   --shadow:      0 4px 24px rgba(0,0,0,0.09);
@@ -210,26 +209,6 @@ body {
 .srow { display: flex; gap: 8px; font-size: 12px; line-height: 2.1; }
 .slbl { color: var(--muted); min-width: 76px; flex-shrink: 0; }
 .sval { font-weight: 700; color: var(--text); word-break: break-word; }
-
-.btn-teams {
-  width: 100%; padding: 12px;
-  background: var(--teams); color: #fff;
-  border: none; border-radius: 8px;
-  font-size: 13px; font-weight: 700; cursor: pointer;
-  text-decoration: none; font-family: inherit;
-  display: flex; align-items: center; justify-content: center; gap: 7px;
-  margin-bottom: 7px; transition: all .14s;
-}
-.btn-teams:hover { background: var(--teams-dk); transform: translateY(-1px); box-shadow: 0 4px 13px rgba(98,100,167,.3); }
-.btn-ics {
-  width: 100%; padding: 10px;
-  background: #fff; color: var(--nd-blue);
-  border: 2px solid var(--nd-blue); border-radius: 8px;
-  font-size: 13px; font-weight: 700; cursor: pointer; font-family: inherit;
-  display: flex; align-items: center; justify-content: center; gap: 7px;
-  margin-bottom: 7px; transition: all .14s;
-}
-.btn-ics:hover { background: var(--avail-bg); }
 .btn-ghost {
   width: 100%; padding: 10px;
   background: #fff; color: var(--muted);
@@ -239,12 +218,6 @@ body {
 }
 .btn-ghost:hover { border-color: var(--nd-blue); color: var(--nd-blue); }
 .hr { height: 1px; background: var(--border); margin: 14px 0; }
-.invite-note {
-  background: #fff8e6; border: 1px solid #fbbf24;
-  border-radius: 7px; padding: 10px 13px;
-  font-size: 11.5px; color: #92400e;
-  margin-bottom: 12px; text-align: left; line-height: 1.5;
-}
 </style>
 </head>
 <body>
@@ -262,10 +235,10 @@ body {
   </div>
 </div>
 
-<!-- MAIN LAYOUT -->
+<!-- MAIN -->
 <div class="main">
 
-  <!-- LEFT: Calendar availability -->
+  <!-- LEFT: Calendar -->
   <div class="card">
     <div class="card-hdr">
       <h2 id="week-label">Loading…</h2>
@@ -280,15 +253,12 @@ body {
     </div>
     <div class="week-body">
       <div id="week-body">
-        <div class="loading-state">
-          <div class="spin"></div>
-          <div>Loading availability…</div>
-        </div>
+        <div class="loading-state"><div class="spin"></div><div>Loading availability…</div></div>
       </div>
     </div>
     <div class="live-strip">
       <div class="live-dot"></div>
-      <span>Availability for next week · 9 AM – 5 PM Eastern (9–10 AM blocked daily)</span>
+      <span>Real availability · 9 AM – 5 PM Eastern · updated 2026-05-07</span>
       <span class="sep"></span>
       <button class="ref-btn" onclick="refreshCal()">↻ Refresh</button>
     </div>
@@ -308,27 +278,69 @@ body {
     </div>
   </div>
 
-</div><!-- end .main -->
+</div>
 
 <script>
 // ─────────────────────────────────────────────────────────────
 // CONFIG
 // ─────────────────────────────────────────────────────────────
-const HOST_NAME   = 'Nikki Patel';
-const HOST_EMAIL  = 'nikki.patel@netdocuments.com';
-const HOST_CO     = 'NetDocuments';
-const WORK_H_S    = 13;   // 9 AM EDT (UTC−4, DST in effect May) = 13:00 UTC
-const WORK_H_E    = 21;   // 5 PM EDT = 21:00 UTC
-const MEET_MIN    = 60;
-const BUF_MIN     = 30;
+const HOST_NAME  = 'Nikki Patel';
+const HOST_EMAIL = 'nikki.patel@netdocuments.com';
+const WORK_H_S   = 13;   // 9 AM EDT = 13:00 UTC (UTC-4, DST May)
+const WORK_H_E   = 21;   // 5 PM EDT = 21:00 UTC
+const MEET_MIN   = 60;
+const BUF_MIN    = 30;
 
-const TZ = {
-  EST: { off: -4, label: 'Eastern (EDT)'  },
-  CST: { off: -5, label: 'Central (CDT)'  },
-  PST: { off: -7, label: 'Pacific (PDT)'  }
+// ─────────────────────────────────────────────────────────────
+// WEB3FORMS — get your free key at https://web3forms.com
+// Enter nikki.patel@netdocuments.com → they'll email the key.
+// Replace the value below with your actual access key.
+// ─────────────────────────────────────────────────────────────
+const WEB3FORMS_KEY = 'a2fc8a9d-56b1-4f19-83eb-0b8951de8ca5';
+
+// ─────────────────────────────────────────────────────────────
+// REAL CALENDAR DATA — week of May 11–15 2026
+// Fetched from Outlook on 2026-05-07. All times in UTC.
+// Only busy (showAs:"busy") events within 13:00–21:00 UTC included.
+// ─────────────────────────────────────────────────────────────
+const CALENDAR_DATA = {
+  '2026-05-11': [
+    { s: '2026-05-11T15:30:00Z', e: '2026-05-11T16:00:00Z' },   // Amir/Nikki GCX Sync
+    { s: '2026-05-11T16:00:00Z', e: '2026-05-11T17:00:00Z' },   // Lunch
+    { s: '2026-05-11T19:00:00Z', e: '2026-05-11T20:00:00Z' },   // V&E App Builder Mtg
+    { s: '2026-05-11T20:00:00Z', e: '2026-05-11T21:00:00Z' },   // Vibe-Code-A-Palooza
+  ],
+  '2026-05-12': [
+    { s: '2026-05-12T15:00:00Z', e: '2026-05-12T15:30:00Z' },   // Engineer/Builder Sync
+    { s: '2026-05-12T16:00:00Z', e: '2026-05-12T17:00:00Z' },   // AI Value & Product Sync
+    { s: '2026-05-12T17:00:00Z', e: '2026-05-12T18:00:00Z' },   // Lunch
+  ],
+  '2026-05-13': [
+    { s: '2026-05-13T14:00:00Z', e: '2026-05-13T15:00:00Z' },   // Company All Hands
+    { s: '2026-05-13T16:00:00Z', e: '2026-05-13T17:00:00Z' },   // ndMax Builders Forum
+    { s: '2026-05-13T17:00:00Z', e: '2026-05-13T18:00:00Z' },   // Lunch
+    { s: '2026-05-13T18:30:00Z', e: '2026-05-13T19:00:00Z' },   // Miles & Stockbridge Check-In
+    { s: '2026-05-13T19:00:00Z', e: '2026-05-13T19:30:00Z' },   // Brooks Pierce Check-In
+  ],
+  '2026-05-14': [
+    { s: '2026-05-14T13:00:00Z', e: '2026-05-14T14:00:00Z' },   // Offline (working later)
+    { s: '2026-05-14T15:00:00Z', e: '2026-05-14T15:30:00Z' },   // Strat Engineers Huddle
+    { s: '2026-05-14T15:30:00Z', e: '2026-05-14T16:30:00Z' },   // Editor + SMEs Standing Hour
+    { s: '2026-05-14T16:30:00Z', e: '2026-05-14T17:30:00Z' },   // Lunch
+  ],
+  '2026-05-15': [
+    { s: '2026-05-15T16:00:00Z', e: '2026-05-15T17:00:00Z' },   // Lunch
+    { s: '2026-05-15T17:00:00Z', e: '2026-05-15T19:00:00Z' },   // 1:1 Goals Prep (blocked)
+  ],
 };
 
-const DAYS  = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+const TZ = {
+  EST: { off: -4, label: 'Eastern (EDT)' },
+  CST: { off: -5, label: 'Central (CDT)' },
+  PST: { off: -7, label: 'Pacific (PDT)' }
+};
+
+const DAYS     = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
 const MONTHS_S = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 const MONTHS_L = ['January','February','March','April','May','June','July','August','September','October','November','December'];
 
@@ -336,52 +348,40 @@ const MONTHS_L = ['January','February','March','April','May','June','July','Augu
 // STATE
 // ─────────────────────────────────────────────────────────────
 const S = {
-  loading:      true,
-  error:        null,
-  busy:         [],          // [{subject, start:Date, end:Date}]
-  slots:        {},          // 'YYYY-MM-DD' → [{start, end}]
-  slot1:        null,        // 1st choice {start, end}
-  slot2:        null,        // 2nd choice {start, end}
-  booked:       new Set(),   // Set of start ISO strings booked this session
-  tz:           'EST',
-  step:         'select',    // 'select' | 'form' | 'confirm'
-  confirmData:  null
+  loading: true, error: null,
+  slots: {},
+  slot1: null, slot2: null,
+  booked: new Set(),
+  tz: 'EST',
+  step: 'select',
+  confirmData: null
 };
 
 // ─────────────────────────────────────────────────────────────
-// DATE UTILITIES  (all UTC-based)
+// DATE HELPERS
 // ─────────────────────────────────────────────────────────────
 function getWeekDays() {
   const now = new Date();
-  const todayUtc = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
-  const dow = todayUtc.getUTCDay(); // 0=Sun
+  const today = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
+  const dow = today.getUTCDay();
   const diff = dow === 1 ? 7 : (dow === 0 ? 1 : 8 - dow);
-  const mon = new Date(todayUtc.getTime() + diff * 86400000);
-  return Array.from({length:5}, (_,i) => new Date(mon.getTime() + i * 86400000));
+  const mon = new Date(today.getTime() + diff * 86400000);
+  return Array.from({length: 5}, (_, i) => new Date(mon.getTime() + i * 86400000));
 }
-
-function dkey(d) {
-  return `${d.getUTCFullYear()}-${pad(d.getUTCMonth()+1)}-${pad(d.getUTCDate())}`;
-}
-function pad(n){ return String(n).padStart(2,'0'); }
-
-// ─────────────────────────────────────────────────────────────
-// TIMEZONE DISPLAY HELPERS
-// ─────────────────────────────────────────────────────────────
-function toLocal(utcDate, tz) {
-  return new Date(utcDate.getTime() + TZ[tz].off * 3600000);
-}
+function dkey(d) { return `${d.getUTCFullYear()}-${pad(d.getUTCMonth()+1)}-${pad(d.getUTCDate())}`; }
+function pad(n) { return String(n).padStart(2, '0'); }
+function toLocal(utcDate, tz) { return new Date(utcDate.getTime() + TZ[tz].off * 3600000); }
 function fmtTime(utcDate, tz) {
   const l = toLocal(utcDate, tz);
-  const h = l.getUTCHours(), m = l.getUTCMinutes();
-  const ap = h >= 12 ? 'PM' : 'AM';
-  const h12 = h === 0 ? 12 : (h > 12 ? h-12 : h);
-  return `${h12}:${pad(m)} ${ap}`;
+  const hh = l.getUTCHours(), mm = l.getUTCMinutes();
+  const ap = hh >= 12 ? 'PM' : 'AM';
+  const h12 = hh === 0 ? 12 : hh > 12 ? hh - 12 : hh;
+  return `${h12}:${pad(mm)} ${ap}`;
 }
 function fmtDateLong(utcDate, tz) {
   const l = toLocal(utcDate, tz);
-  const DAYS_L = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
-  return `${DAYS_L[l.getUTCDay()]}, ${MONTHS_L[l.getUTCMonth()]} ${l.getUTCDate()}, ${l.getUTCFullYear()}`;
+  const DL = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+  return `${DL[l.getUTCDay()]}, ${MONTHS_L[l.getUTCMonth()]} ${l.getUTCDate()}, ${l.getUTCFullYear()}`;
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -390,62 +390,67 @@ function fmtDateLong(utcDate, tz) {
 function computeSlots(dayUtcMidnight, busyBlocks) {
   const ws = dayUtcMidnight.getTime() + WORK_H_S * 3600000;
   const we = dayUtcMidnight.getTime() + WORK_H_E * 3600000;
-  const workStart = ws, workEnd = we;
 
-  // Get busy overlapping this working window
-  const rel = busyBlocks.filter(b => +b.end > workStart && +b.start < workEnd);
-
-  // Expand with buffers, clip to work window
+  // Filter to events overlapping work window, apply buffer (skip for noBuffer events)
+  const rel = busyBlocks.filter(b => +b.end > ws && +b.start < we);
   const blocked = rel.map(b => ({
-    s: Math.max(workStart, +b.start - BUF_MIN * 60000),
-    e: Math.min(workEnd,   +b.end   + BUF_MIN * 60000)
+    s: Math.max(ws, b.noBuffer ? +b.start : +b.start - BUF_MIN * 60000),
+    e: Math.min(we, b.noBuffer ? +b.end   : +b.end   + BUF_MIN * 60000)
   }));
 
   // Sort & merge
-  blocked.sort((a,b) => a.s - b.s);
+  blocked.sort((a, b) => a.s - b.s);
   const merged = [];
   for (const z of blocked) {
-    if (merged.length && z.s <= merged[merged.length-1].e) {
+    if (merged.length && z.s <= merged[merged.length-1].e)
       merged[merged.length-1].e = Math.max(merged[merged.length-1].e, z.e);
-    } else { merged.push({s:z.s, e:z.e}); }
+    else merged.push({s: z.s, e: z.e});
   }
 
   // Scan at 30-min increments for free 60-min windows
   const slots = [];
   const meetMs = MEET_MIN * 60000;
-  let t = workStart;
-  while (t + meetMs <= workEnd) {
+  let t = ws;
+  while (t + meetMs <= we) {
     const te = t + meetMs;
-    const clash = merged.some(z => t < z.e && te > z.s);
-    if (!clash) slots.push({ start: new Date(t), end: new Date(te) });
+    if (!merged.some(z => t < z.e && te > z.s))
+      slots.push({ start: new Date(t), end: new Date(te) });
     t += 30 * 60000;
   }
   return slots;
 }
 
 // ─────────────────────────────────────────────────────────────
-// INIT / REFRESH
+// INIT
 // ─────────────────────────────────────────────────────────────
 function init() {
   S.loading = true; S.error = null;
   renderCal();
 
   const days = getWeekDays();
+  S.slots = {};
 
-  // Static version: no live calendar. All slots open except 9–10 AM block.
-  S.busy = [];
-
-  // Inject 9–10 AM EDT block (13:00–14:00 UTC) for every day
   for (const d of days) {
-    S.busy.push({
-      subject: 'Blocked (9–10 AM)',
+    const key = dkey(d);
+    const busy = [];
+
+    // Always block 9–10 AM EDT (13:00–14:00 UTC) — no buffer
+    busy.push({
+      noBuffer: true,
       start: new Date(d.getTime() + 13 * 3600000),
       end:   new Date(d.getTime() + 14 * 3600000)
     });
+
+    // Add real calendar events for this date if we have them
+    if (CALENDAR_DATA[key]) {
+      for (const ev of CALENDAR_DATA[key]) {
+        busy.push({ start: new Date(ev.s), end: new Date(ev.e) });
+      }
+    }
+
+    S.slots[key] = computeSlots(d, busy);
   }
 
-  S.slots = {};
-  for (const d of days) S.slots[dkey(d)] = computeSlots(d, S.busy);
   S.loading = false;
   renderCal();
 }
@@ -456,17 +461,15 @@ function refreshCal() { init(); }
 // RENDER: CALENDAR
 // ─────────────────────────────────────────────────────────────
 function renderCal() {
-  const el = document.getElementById('week-body');
+  const el  = document.getElementById('week-body');
   const lbl = document.getElementById('week-label');
 
   if (S.loading) {
-    el.innerHTML = `<div class="loading-state"><div class="spin"></div><div>Loading live availability…</div></div>`;
-    lbl.textContent = 'Checking calendar…';
-    return;
+    el.innerHTML = `<div class="loading-state"><div class="spin"></div><div>Loading availability…</div></div>`;
+    lbl.textContent = 'Checking calendar…'; return;
   }
   if (S.error) {
-    el.innerHTML = `<div class="error-state">${h(S.error)} <button class="ref-btn" onclick="refreshCal()">Try again</button></div>`;
-    return;
+    el.innerHTML = `<div class="error-state">${h(S.error)} <button class="ref-btn" onclick="refreshCal()">Try again</button></div>`; return;
   }
 
   const days = getWeekDays();
@@ -488,19 +491,17 @@ function renderCal() {
       html += `<div class="no-sl-msg">No open slots</div>`;
     } else {
       for (const slot of slots) {
-        const iso = slot.start.toISOString();
-        const is1  = S.slot1 && S.slot1.start.toISOString() === iso;
-        const is2  = S.slot2 && S.slot2.start.toISOString() === iso;
+        const iso    = slot.start.toISOString();
+        const is1    = S.slot1 && S.slot1.start.toISOString() === iso;
+        const is2    = S.slot2 && S.slot2.start.toISOString() === iso;
         const isUsed = S.booked.has(iso);
-        let cls = 'sl' + (isUsed ? ' used' : is1 ? ' sel1' : is2 ? ' sel2' : '');
-        const timeLabel = `${fmtTime(slot.start, S.tz)} – ${fmtTime(slot.end, S.tz)}`;
-        let badge = is1 ? '<br><span style="font-size:10px;letter-spacing:.3px">1ST CHOICE ✓</span>'
-                  : is2 ? '<br><span style="font-size:10px;letter-spacing:.3px">2ND CHOICE ✓</span>' : '';
-        if (isUsed) {
-          html += `<button class="${cls}" disabled>${timeLabel}</button>`;
-        } else {
-          html += `<button class="${cls}" onclick="pickSlot('${iso}')">${timeLabel}${badge}</button>`;
-        }
+        const cls    = 'sl' + (isUsed ? ' used' : is1 ? ' sel1' : is2 ? ' sel2' : '');
+        const label  = `${fmtTime(slot.start, S.tz)} – ${fmtTime(slot.end, S.tz)}`;
+        const badge  = is1 ? '<br><span style="font-size:10px;letter-spacing:.3px">1ST CHOICE ✓</span>'
+                     : is2 ? '<br><span style="font-size:10px;letter-spacing:.3px">2ND CHOICE ✓</span>' : '';
+        html += isUsed
+          ? `<button class="${cls}" disabled>${label}</button>`
+          : `<button class="${cls}" onclick="pickSlot('${iso}')">${label}${badge}</button>`;
       }
     }
     html += `</div>`;
@@ -513,7 +514,6 @@ function renderCal() {
 // SLOT SELECTION
 // ─────────────────────────────────────────────────────────────
 function pickSlot(iso) {
-  // Find the slot object
   let found = null;
   for (const key of Object.keys(S.slots)) {
     found = S.slots[key].find(s => s.start.toISOString() === iso);
@@ -524,26 +524,14 @@ function pickSlot(iso) {
   const is1 = S.slot1 && S.slot1.start.toISOString() === iso;
   const is2 = S.slot2 && S.slot2.start.toISOString() === iso;
 
-  if (is1) {
-    // Deselect 1st — promote 2nd to 1st
-    S.slot1 = S.slot2 || null;
-    S.slot2 = null;
-  } else if (is2) {
-    // Deselect 2nd
-    S.slot2 = null;
-  } else if (!S.slot1) {
-    S.slot1 = found;
-  } else if (!S.slot2) {
-    S.slot2 = found;
-  } else {
-    // Both filled — replace 2nd choice
-    S.slot2 = found;
-  }
+  if      (is1)     { S.slot1 = S.slot2 || null; S.slot2 = null; }
+  else if (is2)     { S.slot2 = null; }
+  else if (!S.slot1){ S.slot1 = found; }
+  else if (!S.slot2){ S.slot2 = found; }
+  else              { S.slot2 = found; }
 
   if (S.slot1 || S.slot2) S.step = 'form';
-  renderCal();
-  renderForm();
-  updateTimeDisp();
+  renderCal(); renderForm(); updateTimeDisp();
 }
 
 function updateTimeDisp() {
@@ -558,7 +546,7 @@ function updateTimeDisp() {
 function onTzChange(tz) {
   S.tz = tz;
   renderCal();
-  if (S.step === 'form')    { renderForm(); updateTimeDisp(); }
+  if (S.step === 'form')    { renderForm();    updateTimeDisp(); }
   if (S.step === 'confirm') { renderConfirm(); updateTimeDisp(); }
   if (S.slot1) updateTimeDisp();
 }
@@ -571,23 +559,22 @@ function renderForm() {
   const tdEl = document.getElementById('sel-time-disp');
   if (!S.slot1) {
     area.innerHTML = `<div class="prompt"><div class="prompt-ico">🗓</div><p>Select your <strong>1st choice</strong> time slot, then optionally a <strong>2nd choice</strong>. Fill in your details to submit.</p></div>`;
-    tdEl.textContent = '← Select up to 2 time slots';
-    return;
+    tdEl.textContent = '← Select up to 2 time slots'; return;
   }
   updateTimeDisp();
 
-  const slot1Str = S.slot1 ? `${fmtDateLong(S.slot1.start, S.tz)}, ${fmtTime(S.slot1.start, S.tz)} – ${fmtTime(S.slot1.end, S.tz)} ${S.tz}` : '—';
-  const slot2Str = S.slot2 ? `${fmtDateLong(S.slot2.start, S.tz)}, ${fmtTime(S.slot2.start, S.tz)} – ${fmtTime(S.slot2.end, S.tz)} ${S.tz}` : 'Not selected';
+  const s1 = `${fmtDateLong(S.slot1.start, S.tz)}, ${fmtTime(S.slot1.start, S.tz)} – ${fmtTime(S.slot1.end, S.tz)} ${S.tz}`;
+  const s2 = S.slot2 ? `${fmtDateLong(S.slot2.start, S.tz)}, ${fmtTime(S.slot2.start, S.tz)} – ${fmtTime(S.slot2.end, S.tz)} ${S.tz}` : 'Not selected';
 
   area.innerHTML = `
     <div class="form-body">
       <div class="fg">
         <label>1st Choice Time</label>
-        <input class="ro" type="text" value="${h(slot1Str)}" readonly>
+        <input class="ro" type="text" value="${h(s1)}" readonly>
       </div>
       <div class="fg">
         <label>2nd Choice Time <span style="font-weight:400;text-transform:none;font-size:11px;color:var(--muted)">(optional)</span></label>
-        <input class="ro" type="text" value="${h(slot2Str)}" readonly style="${S.slot2 ? '' : 'color:var(--muted);font-style:italic'}">
+        <input class="ro" type="text" value="${h(s2)}" readonly style="${S.slot2 ? '' : 'color:var(--muted);font-style:italic'}">
       </div>
       <div class="fg">
         <label>Company Name *</label>
@@ -608,9 +595,7 @@ function renderForm() {
       <button class="btn-primary" id="sub-btn" disabled onclick="doBook()">
         ✉️ Submit Meeting Request
       </button>
-      <div class="form-note">
-        Your request will be sent to Nikki, who will confirm a time and send a Teams invite.
-      </div>
+      <div class="form-note">Your request will be sent directly to Nikki, who will confirm a time and send a Teams invite.</div>
     </div>`;
 }
 
@@ -625,21 +610,73 @@ function chkForm() {
 }
 
 // ─────────────────────────────────────────────────────────────
-// SUBMIT BOOKING
+// SUBMIT — sends email automatically via Web3Forms
 // ─────────────────────────────────────────────────────────────
-function doBook() {
+async function doBook() {
   const co = document.getElementById('f-co')?.value.trim();
   const nm = document.getElementById('f-nm')?.value.trim();
   const em = document.getElementById('f-em')?.value.trim();
   const pu = document.getElementById('f-pu')?.value.trim();
   if (!co || !nm || !em || !pu || !S.slot1) return;
 
-  S.confirmData = { co, nm, em, pu, slot1: S.slot1, slot2: S.slot2 };
-  S.booked.add(S.slot1.start.toISOString());
-  if (S.slot2) S.booked.add(S.slot2.start.toISOString());
-  S.step = 'confirm';
-  renderCal();
-  renderConfirm();
+  // Show sending state
+  const btn = document.getElementById('sub-btn');
+  btn.disabled = true;
+  btn.innerHTML = '<div class="spin" style="width:16px;height:16px;margin:0;border-width:2px;display:inline-block"></div>&nbsp; Sending…';
+
+  const fmt1 = `${fmtDateLong(S.slot1.start, S.tz)}, ${fmtTime(S.slot1.start, S.tz)} – ${fmtTime(S.slot1.end, S.tz)} ${S.tz}`;
+  const fmt2 = S.slot2 ? `${fmtDateLong(S.slot2.start, S.tz)}, ${fmtTime(S.slot2.start, S.tz)} – ${fmtTime(S.slot2.end, S.tz)} ${S.tz}` : 'Not selected';
+
+  const msgBody = [
+    `Hi Nikki,`,
+    ``,
+    `You have a new meeting request.`,
+    ``,
+    `CUSTOMER DETAILS`,
+    `Name:        ${nm}`,
+    `Company:     ${co}`,
+    `Email:       ${em}`,
+    `Purpose:     ${pu}`,
+    ``,
+    `PREFERRED TIMES`,
+    `1st Choice:  ${fmt1}`,
+    `2nd Choice:  ${fmt2}`,
+    ``,
+    `Please confirm one of the times and send ${nm} a Teams invite at ${em}.`,
+    `Suggested title: ${co} | ND - ${pu}`
+  ].join('\n');
+
+  const fd = new FormData();
+  fd.append('access_key', WEB3FORMS_KEY);
+  fd.append('subject',    `Meeting Request: ${co} | ND - ${pu}`);
+  fd.append('from_name',  nm);
+  fd.append('email',      em);   // customer's email becomes the reply-to
+  fd.append('message',    msgBody);
+
+  try {
+    const res  = await fetch('https://api.web3forms.com/submit', { method: 'POST', body: fd });
+    const data = await res.json();
+
+    if (data.success) {
+      S.confirmData = { co, nm, em, pu, slot1: S.slot1, slot2: S.slot2 };
+      S.booked.add(S.slot1.start.toISOString());
+      if (S.slot2) S.booked.add(S.slot2.start.toISOString());
+      S.slot1 = null; S.slot2 = null;
+      S.step = 'confirm';
+      renderCal();
+      renderConfirm();
+    } else {
+      btn.disabled = false;
+      btn.innerHTML = '✉️ Submit Meeting Request';
+      alert('There was a problem sending your request. Please try again or email nikki.patel@netdocuments.com directly.');
+      console.error('Web3Forms error:', data);
+    }
+  } catch (err) {
+    btn.disabled = false;
+    btn.innerHTML = '✉️ Submit Meeting Request';
+    alert('Network error. Please check your connection and try again.');
+    console.error('Fetch error:', err);
+  }
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -652,32 +689,13 @@ function renderConfirm() {
 
   const fmt1 = `${fmtDateLong(slot1.start, S.tz)}, ${fmtTime(slot1.start, S.tz)} – ${fmtTime(slot1.end, S.tz)} ${S.tz}`;
   const fmt2 = slot2 ? `${fmtDateLong(slot2.start, S.tz)}, ${fmtTime(slot2.start, S.tz)} – ${fmtTime(slot2.end, S.tz)} ${S.tz}` : null;
-
   updateTimeDisp();
-
-  // Build email to Nikki with all details
-  const subject = `Meeting Request: ${co} | ND - ${pu}`;
-  let body = `Hi Nikki,\n\nYou have a new meeting request.\n\n`;
-  body += `CUSTOMER DETAILS\n`;
-  body += `Name:     ${nm}\n`;
-  body += `Company:  ${co}\n`;
-  body += `Email:    ${em}\n`;
-  body += `Purpose:  ${pu}\n\n`;
-  body += `PREFERRED TIMES\n`;
-  body += `1st Choice:  ${fmt1}\n`;
-  if (fmt2) body += `2nd Choice:  ${fmt2}\n`;
-  body += `\nPlease confirm one of the times above and send ${nm} a Teams meeting invite at ${em}.\n`;
-  body += `Suggested meeting title: ${co} | ND - ${pu}`;
-
-  const outlookURL = `https://outlook.office.com/mail/deeplink/compose?to=${enc(HOST_EMAIL)}&subject=${enc(subject)}&body=${enc(body)}`;
-  const mailtoURL  = `mailto:${HOST_EMAIL}?subject=${enc(subject)}&body=${enc(body)}`;
 
   area.innerHTML = `
     <div class="confirm">
       <div class="check-ico">✅</div>
-      <h3>Request Submitted!</h3>
-      <div class="sub">Nikki will confirm a time and send you a Teams invite</div>
-
+      <h3>Request Sent!</h3>
+      <div class="sub">Nikki has been notified and will confirm a time and send a Teams invite.</div>
       <div class="meet-sum">
         <div class="srow"><span class="slbl">Company</span><span class="sval">${h(co)}</span></div>
         <div class="srow"><span class="slbl">Name</span><span class="sval">${h(nm)}</span></div>
@@ -686,19 +704,8 @@ function renderConfirm() {
         <div class="srow"><span class="slbl">1st Choice</span><span class="sval" style="color:var(--nd-blue);font-weight:800">${fmt1}</span></div>
         ${fmt2 ? `<div class="srow"><span class="slbl">2nd Choice</span><span class="sval" style="color:#a78bfa;font-weight:700">${fmt2}</span></div>` : ''}
       </div>
-
-      <div class="invite-note">
-        📬 <strong>For Nikki:</strong> Open the pre-filled email below, pick one of the requested times, and send ${h(nm)} a Teams calendar invite.
-      </div>
-
-      <a href="${outlookURL}" target="_blank" class="btn-teams">
-        📧 Open Pre-filled Email in Outlook
-      </a>
-      <a href="${mailtoURL}" class="btn-ics">
-        ✉️ Open in Default Mail App
-      </a>
       <div class="hr"></div>
-      <button class="btn-ghost" onclick="bookAgain()">← New Booking</button>
+      <button class="btn-ghost" onclick="bookAgain()">← Submit Another Request</button>
     </div>`;
 }
 
@@ -714,7 +721,6 @@ function bookAgain() {
 function h(s) {
   return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
-function enc(s) { return encodeURIComponent(s); }
 
 // ─────────────────────────────────────────────────────────────
 // GO
