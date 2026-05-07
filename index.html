@@ -258,9 +258,7 @@ body {
     </div>
     <div class="live-strip">
       <div class="live-dot"></div>
-      <span>Real availability · 9 AM – 5 PM Eastern · updated 2026-05-07</span>
-      <span class="sep"></span>
-      <button class="ref-btn" onclick="refreshCal()">↻ Refresh</button>
+      <span id="live-strip-txt">Real availability · 9 AM – 5 PM Eastern</span>
     </div>
   </div>
 
@@ -300,8 +298,8 @@ const WEB3FORMS_KEY = 'a2fc8a9d-56b1-4f19-83eb-0b8951de8ca5';
 
 // ─────────────────────────────────────────────────────────────
 // REAL CALENDAR DATA — week of May 11–15 2026
-// Fetched from Outlook on 2026-05-07. All times in UTC.
-// Only busy (showAs:"busy") events within 13:00–21:00 UTC included.
+// Refreshed from Outlook. All times in UTC.
+// Only busy events within 13:00–21:00 UTC (9 AM–5 PM EDT) included.
 // ─────────────────────────────────────────────────────────────
 const CALENDAR_DATA = {
   '2026-05-11': [
@@ -333,6 +331,9 @@ const CALENDAR_DATA = {
     { s: '2026-05-15T17:00:00Z', e: '2026-05-15T19:00:00Z' },   // 1:1 Goals Prep (blocked)
   ],
 };
+
+// Date the CALENDAR_DATA above was last refreshed (shown in the live strip)
+const LAST_REFRESHED = '2026-05-07';
 
 const TZ = {
   EST: { off: -4, label: 'Eastern (EDT)' },
@@ -455,8 +456,6 @@ function init() {
   renderCal();
 }
 
-function refreshCal() { init(); }
-
 // ─────────────────────────────────────────────────────────────
 // RENDER: CALENDAR
 // ─────────────────────────────────────────────────────────────
@@ -464,12 +463,18 @@ function renderCal() {
   const el  = document.getElementById('week-body');
   const lbl = document.getElementById('week-label');
 
+  const strip = document.getElementById('live-strip-txt');
+
   if (S.loading) {
     el.innerHTML = `<div class="loading-state"><div class="spin"></div><div>Loading availability…</div></div>`;
     lbl.textContent = 'Checking calendar…'; return;
   }
   if (S.error) {
-    el.innerHTML = `<div class="error-state">${h(S.error)} <button class="ref-btn" onclick="refreshCal()">Try again</button></div>`; return;
+    el.innerHTML = `<div class="error-state">${h(S.error)}</div>`; return;
+  }
+
+  if (strip) {
+    strip.textContent = `Real availability · 9 AM – 5 PM Eastern · updated ${LAST_REFRESHED}`;
   }
 
   const days = getWeekDays();
