@@ -1,0 +1,738 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Schedule a Meeting — Nikki Patel | NetDocuments</title>
+<style>
+:root {
+  color-scheme: light;
+  --nd-navy:     #0a2756;
+  --nd-blue:     #266EE8;
+  --nd-blue-dk:  #1d56c4;
+  --nd-light:    #e8f0fe;
+  --teams:       #6264a7;
+  --teams-dk:    #4b4d8a;
+  --bg:          #f5f8fc;
+  --card:        #ffffff;
+  --text:        #353535;
+  --muted:       #6b7280;
+  --border:      #d9e2ec;
+  --success:     #107c10;
+  --avail-bg:    #e8f0fe;
+  --avail-brd:   #266EE8;
+  --r:           10px;
+  --r-sm:        6px;
+  --shadow:      0 4px 24px rgba(10,39,86,0.10);
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+/* ── HEADER ─────────────────────────────────────────────── */
+.page-header {
+  background: linear-gradient(120deg, #0a2756 0%, #1d56c4 45%, #266EE8 100%);
+  color: #fff;
+  padding: 26px 36px;
+  display: flex;
+  align-items: center;
+  gap: 18px;
+}
+.avatar {
+  width: 58px; height: 58px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.18);
+  border: 2px solid rgba(255,255,255,0.38);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 22px; font-weight: 800; flex-shrink: 0;
+  letter-spacing: -1px;
+}
+.hdr-info h1 { font-size: 19px; font-weight: 700; margin-bottom: 7px; }
+.chips { display: flex; gap: 7px; flex-wrap: wrap; }
+.chip {
+  display: inline-flex; align-items: center; gap: 5px;
+  background: rgba(255,255,255,0.14);
+  border-radius: 20px;
+  padding: 3px 11px;
+  font-size: 11.5px;
+}
+
+/* ── LAYOUT ─────────────────────────────────────────────── */
+.main {
+  max-width: 1100px;
+  margin: 26px auto;
+  padding: 0 20px;
+  display: grid;
+  grid-template-columns: 1fr 356px;
+  gap: 20px;
+  align-items: start;
+}
+@media (max-width: 820px) { .main { grid-template-columns: 1fr; } }
+
+/* ── CARD ───────────────────────────────────────────────── */
+.card {
+  background: var(--card);
+  border-radius: var(--r);
+  box-shadow: var(--shadow);
+  overflow: hidden;
+}
+.card-hdr {
+  padding: 16px 22px;
+  border-bottom: 1px solid var(--border);
+  display: flex; align-items: center;
+  justify-content: space-between; flex-wrap: wrap; gap: 10px;
+}
+.card-hdr h2 { font-size: 14.5px; font-weight: 700; }
+
+/* ── TZ SELECTOR ────────────────────────────────────────── */
+.tz-row { display: flex; align-items: center; gap: 7px; font-size: 12px; }
+.tz-row label { color: var(--muted); white-space: nowrap; }
+.tz-row select {
+  border: 1px solid var(--border);
+  border-radius: var(--r-sm);
+  padding: 5px 9px;
+  font-size: 12px; background: #fff; color: var(--text); cursor: pointer;
+  outline: none; font-family: inherit;
+}
+.tz-row select:focus { border-color: var(--nd-blue); box-shadow: 0 0 0 2px rgba(0,120,212,.12); }
+
+/* ── WEEK GRID ──────────────────────────────────────────── */
+.week-body { padding: 18px 22px; overflow-x: auto; }
+.week-cols {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(116px, 1fr));
+  gap: 10px; min-width: 540px;
+}
+.day-col { display: flex; flex-direction: column; gap: 5px; }
+.day-head {
+  text-align: center; padding: 9px 4px 7px;
+  background: var(--nd-light); border-radius: var(--r-sm); margin-bottom: 3px;
+}
+.day-name { font-size: 10px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .7px; }
+.day-num  { font-size: 21px; font-weight: 800; color: var(--nd-navy); line-height: 1.2; }
+.day-mo   { font-size: 11px; color: var(--muted); }
+
+/* slot button */
+.sl {
+  width: 100%; padding: 7px 5px;
+  border: 1.5px solid var(--avail-brd);
+  border-radius: var(--r-sm);
+  background: var(--avail-bg); color: var(--nd-blue);
+  font-size: 11.5px; font-weight: 700; cursor: pointer;
+  transition: all .14s ease; text-align: center; line-height: 1.35;
+  font-family: inherit;
+}
+.sl:hover    { background: var(--nd-blue); color: #fff; transform: translateY(-1px); box-shadow: 0 3px 9px rgba(38,110,232,.24); }
+.sl.sel1     { background: var(--nd-blue); color: #fff; border-color: var(--nd-blue-dk); box-shadow: 0 3px 9px rgba(38,110,232,.3); }
+.sl.sel2     { background: #6b9aef; color: #fff; border-color: #266EE8; box-shadow: 0 3px 9px rgba(107,154,239,.35); }
+.sl.used     { border-color: var(--border); background: #f4f4f4; color: var(--muted); cursor: not-allowed; opacity: .5; transform: none !important; box-shadow: none !important; }
+.no-sl-msg   { text-align: center; font-size: 11px; color: var(--muted); font-style: italic; padding: 14px 4px; }
+
+/* states */
+.loading-state { padding: 44px 0; text-align: center; color: var(--muted); }
+.spin { width: 28px; height: 28px; border: 3px solid var(--border); border-top-color: var(--nd-blue); border-radius: 50%; animation: spin .75s linear infinite; margin: 0 auto 12px; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.error-state { padding: 28px; text-align: center; color: #c0392b; font-size: 13px; }
+
+/* live badge */
+.live-strip {
+  display: flex; align-items: center; gap: 6px;
+  font-size: 11px; color: var(--muted);
+  padding: 8px 22px 12px; border-top: 1px solid var(--border); margin-top: 4px;
+}
+.live-dot { width: 7px; height: 7px; background: #22c55e; border-radius: 50%; animation: pulse 2s ease-in-out infinite; flex-shrink: 0; }
+@keyframes pulse { 0%,100%{ opacity:1; transform:scale(1); } 50%{ opacity:.4; transform:scale(.75); } }
+.ref-btn { color: var(--nd-blue); cursor: pointer; font-weight: 700; border: none; background: none; font-size: 11px; text-decoration: underline; font-family: inherit; }
+.sep { flex: 1; }
+
+/* ── FORM PANEL ─────────────────────────────────────────── */
+.form-panel { position: sticky; top: 20px; }
+.form-hdr {
+  background: linear-gradient(120deg, #0a2756 0%, #1d56c4 50%, #266EE8 100%);
+  color: #fff; padding: 17px 22px;
+}
+.form-hdr h2 { font-size: 14.5px; font-weight: 700; margin-bottom: 3px; }
+.sel-time { font-size: 12px; opacity: .82; min-height: 16px; }
+
+/* prompt */
+.prompt { padding: 40px 22px; text-align: center; color: var(--muted); }
+.prompt-ico { font-size: 30px; margin-bottom: 10px; }
+.prompt p { font-size: 13px; line-height: 1.6; }
+
+/* form body */
+.form-body { padding: 18px 22px; }
+.fg { margin-bottom: 15px; }
+.fg label { display: block; font-size: 11.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .4px; color: var(--text); margin-bottom: 5px; }
+.fg input, .fg textarea {
+  width: 100%; padding: 9px 13px;
+  border: 1.5px solid var(--border); border-radius: 8px;
+  font-size: 13px; font-family: inherit; background: #fff; color: var(--text);
+  transition: border-color .14s, box-shadow .14s;
+}
+.fg textarea { resize: vertical; min-height: 68px; }
+.fg input:focus, .fg textarea:focus { outline: none; border-color: var(--nd-blue); box-shadow: 0 0 0 3px rgba(0,120,212,.1); }
+.fg input.ro  { background: var(--bg); color: var(--muted); cursor: default; }
+
+/* buttons */
+.btn-primary {
+  width: 100%; padding: 13px;
+  background: var(--nd-blue); color: #fff;
+  border: none; border-radius: 8px;
+  font-size: 14px; font-weight: 700; cursor: pointer; font-family: inherit;
+  display: flex; align-items: center; justify-content: center; gap: 7px;
+  transition: all .14s;
+}
+.btn-primary:hover:not(:disabled) { background: var(--nd-blue-dk); transform: translateY(-1px); box-shadow: 0 4px 14px rgba(0,120,212,.28); }
+.btn-primary:disabled { background: var(--border); color: var(--muted); cursor: not-allowed; transform: none; box-shadow: none; }
+.form-note { font-size: 11px; color: var(--muted); text-align: center; margin-top: 9px; line-height: 1.5; }
+
+/* ── CONFIRMATION ───────────────────────────────────────── */
+.confirm { padding: 26px 22px; text-align: center; }
+.check-ico {
+  width: 58px; height: 58px; border-radius: 50%;
+  background: #ecfdf5; border: 2px solid #bbf7d0;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 24px; margin: 0 auto 12px;
+}
+.confirm h3 { font-size: 15.5px; font-weight: 800; color: var(--success); margin-bottom: 4px; }
+.confirm .sub { font-size: 12px; color: var(--muted); margin-bottom: 14px; }
+.meet-sum {
+  background: var(--bg); border-radius: 8px;
+  padding: 13px 15px; margin-bottom: 16px; text-align: left;
+}
+.srow { display: flex; gap: 8px; font-size: 12px; line-height: 2.1; }
+.slbl { color: var(--muted); min-width: 76px; flex-shrink: 0; }
+.sval { font-weight: 700; color: var(--text); word-break: break-word; }
+.btn-ghost {
+  width: 100%; padding: 10px;
+  background: #fff; color: var(--muted);
+  border: 1.5px solid var(--border); border-radius: 8px;
+  font-size: 13px; font-weight: 600; cursor: pointer; font-family: inherit;
+  transition: all .14s;
+}
+.btn-ghost:hover { border-color: var(--nd-blue); color: var(--nd-blue); }
+.hr { height: 1px; background: var(--border); margin: 14px 0; }
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="page-header">
+  <div class="avatar">NP</div>
+  <div class="hdr-info">
+    <h1>Schedule a Meeting with Nikki Patel (NetDocuments)</h1>
+    <div class="chips">
+      <span class="chip">⏱ 60 Minutes</span>
+      <span class="chip">📹 Microsoft Teams</span>
+      <span class="chip">🗓 Next Week</span>
+    </div>
+  </div>
+</div>
+
+<!-- MAIN -->
+<div class="main">
+
+  <!-- LEFT: Calendar -->
+  <div class="card">
+    <div class="card-hdr">
+      <h2 id="week-label">Loading…</h2>
+      <div class="tz-row">
+        <label for="tz-sel">🌐 Timezone:</label>
+        <select id="tz-sel" onchange="onTzChange(this.value)">
+          <option value="EST" selected>Eastern (EDT)</option>
+          <option value="CST">Central (CDT)</option>
+          <option value="PST">Pacific (PDT)</option>
+        </select>
+      </div>
+    </div>
+    <div class="week-body">
+      <div id="week-body">
+        <div class="loading-state"><div class="spin"></div><div>Loading availability…</div></div>
+      </div>
+    </div>
+    <div class="live-strip">
+      <div class="live-dot"></div>
+      <span id="live-strip-txt">Real availability · 9 AM – 5 PM Eastern</span>
+    </div>
+  </div>
+
+  <!-- RIGHT: Booking form -->
+  <div class="card form-panel">
+    <div class="form-hdr">
+      <h2>Book Your Meeting</h2>
+      <div class="sel-time" id="sel-time-disp">← Select a time slot to begin</div>
+    </div>
+    <div id="form-area">
+      <div class="prompt">
+        <div class="prompt-ico">🗓</div>
+        <p>Choose an available time slot on the left, then fill in your details to request a meeting.</p>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+// ─────────────────────────────────────────────────────────────
+// CONFIG
+// ─────────────────────────────────────────────────────────────
+const HOST_NAME  = 'Nikki Patel';
+const HOST_EMAIL = 'nikki.patel@netdocuments.com';
+const WORK_H_S   = 13;   // 9 AM EDT = 13:00 UTC (UTC-4, DST May)
+const WORK_H_E   = 21;   // 5 PM EDT = 21:00 UTC
+const MEET_MIN   = 60;
+const BUF_MIN    = 30;
+
+// ─────────────────────────────────────────────────────────────
+// WEB3FORMS — get your free key at https://web3forms.com
+// Enter nikki.patel@netdocuments.com → they'll email the key.
+// Replace the value below with your actual access key.
+// ─────────────────────────────────────────────────────────────
+const WEB3FORMS_KEY = 'a2fc8a9d-56b1-4f19-83eb-0b8951de8ca5';
+
+// ─────────────────────────────────────────────────────────────
+// REAL CALENDAR DATA — week of May 11–15 2026
+// Refreshed from Outlook. All times in UTC.
+// Only busy events within 13:00–21:00 UTC (9 AM–5 PM EDT) included.
+// ─────────────────────────────────────────────────────────────
+const CALENDAR_DATA = {
+  '2026-05-11': [
+    { s: '2026-05-11T15:30:00Z', e: '2026-05-11T16:00:00Z' },   // Amir/Nikki GCX Sync
+    { s: '2026-05-11T16:00:00Z', e: '2026-05-11T17:00:00Z' },   // Lunch
+    { s: '2026-05-11T19:00:00Z', e: '2026-05-11T20:00:00Z' },   // V&E App Builder Mtg
+    { s: '2026-05-11T20:00:00Z', e: '2026-05-11T21:00:00Z' },   // Vibe-Code-A-Palooza
+  ],
+  '2026-05-12': [
+    { s: '2026-05-12T15:00:00Z', e: '2026-05-12T15:30:00Z' },   // Engineer/Builder Sync
+    { s: '2026-05-12T16:00:00Z', e: '2026-05-12T17:00:00Z' },   // AI Value & Product Sync
+    { s: '2026-05-12T17:00:00Z', e: '2026-05-12T18:00:00Z' },   // Lunch
+  ],
+  '2026-05-13': [
+    { s: '2026-05-13T14:00:00Z', e: '2026-05-13T15:00:00Z' },   // Company All Hands
+    { s: '2026-05-13T16:00:00Z', e: '2026-05-13T17:00:00Z' },   // ndMax Builders Forum
+    { s: '2026-05-13T17:00:00Z', e: '2026-05-13T18:00:00Z' },   // Lunch
+    { s: '2026-05-13T18:30:00Z', e: '2026-05-13T19:00:00Z' },   // Miles & Stockbridge Check-In
+    { s: '2026-05-13T19:00:00Z', e: '2026-05-13T19:30:00Z' },   // Brooks Pierce Check-In
+  ],
+  '2026-05-14': [
+    { s: '2026-05-14T13:00:00Z', e: '2026-05-14T14:00:00Z' },   // Offline (working later)
+    { s: '2026-05-14T15:00:00Z', e: '2026-05-14T15:30:00Z' },   // Strat Engineers Huddle
+    { s: '2026-05-14T15:30:00Z', e: '2026-05-14T16:30:00Z' },   // Editor + SMEs Standing Hour
+    { s: '2026-05-14T16:30:00Z', e: '2026-05-14T17:30:00Z' },   // Lunch
+  ],
+  '2026-05-15': [
+    { s: '2026-05-15T16:00:00Z', e: '2026-05-15T17:00:00Z' },   // Lunch
+    { s: '2026-05-15T17:00:00Z', e: '2026-05-15T19:00:00Z' },   // 1:1 Goals Prep (blocked)
+  ],
+};
+
+// When the CALENDAR_DATA above was last refreshed (shown in the live strip)
+const LAST_REFRESHED = '2026-05-07 1:40 PM EDT';
+
+const TZ = {
+  EST: { off: -4, label: 'Eastern (EDT)' },
+  CST: { off: -5, label: 'Central (CDT)' },
+  PST: { off: -7, label: 'Pacific (PDT)' }
+};
+
+const DAYS     = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+const MONTHS_S = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+const MONTHS_L = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+
+// ─────────────────────────────────────────────────────────────
+// STATE
+// ─────────────────────────────────────────────────────────────
+const S = {
+  loading: true, error: null,
+  slots: {},
+  slot1: null, slot2: null,
+  booked: new Set(),
+  tz: 'EST',
+  step: 'select',
+  confirmData: null
+};
+
+// ─────────────────────────────────────────────────────────────
+// DATE HELPERS
+// ─────────────────────────────────────────────────────────────
+function getWeekDays() {
+  const now = new Date();
+  const today = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
+  const dow = today.getUTCDay();
+  const diff = dow === 1 ? 7 : (dow === 0 ? 1 : 8 - dow);
+  const mon = new Date(today.getTime() + diff * 86400000);
+  return Array.from({length: 5}, (_, i) => new Date(mon.getTime() + i * 86400000));
+}
+function dkey(d) { return `${d.getUTCFullYear()}-${pad(d.getUTCMonth()+1)}-${pad(d.getUTCDate())}`; }
+function pad(n) { return String(n).padStart(2, '0'); }
+function toLocal(utcDate, tz) { return new Date(utcDate.getTime() + TZ[tz].off * 3600000); }
+function fmtTime(utcDate, tz) {
+  const l = toLocal(utcDate, tz);
+  const hh = l.getUTCHours(), mm = l.getUTCMinutes();
+  const ap = hh >= 12 ? 'PM' : 'AM';
+  const h12 = hh === 0 ? 12 : hh > 12 ? hh - 12 : hh;
+  return `${h12}:${pad(mm)} ${ap}`;
+}
+function fmtDateLong(utcDate, tz) {
+  const l = toLocal(utcDate, tz);
+  const DL = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+  return `${DL[l.getUTCDay()]}, ${MONTHS_L[l.getUTCMonth()]} ${l.getUTCDate()}, ${l.getUTCFullYear()}`;
+}
+
+// ─────────────────────────────────────────────────────────────
+// SLOT COMPUTATION
+// ─────────────────────────────────────────────────────────────
+function computeSlots(dayUtcMidnight, busyBlocks) {
+  const ws = dayUtcMidnight.getTime() + WORK_H_S * 3600000;
+  const we = dayUtcMidnight.getTime() + WORK_H_E * 3600000;
+
+  // Filter to events overlapping work window, apply buffer (skip for noBuffer events)
+  const rel = busyBlocks.filter(b => +b.end > ws && +b.start < we);
+  const blocked = rel.map(b => ({
+    s: Math.max(ws, b.noBuffer ? +b.start : +b.start - BUF_MIN * 60000),
+    e: Math.min(we, b.noBuffer ? +b.end   : +b.end   + BUF_MIN * 60000)
+  }));
+
+  // Sort & merge
+  blocked.sort((a, b) => a.s - b.s);
+  const merged = [];
+  for (const z of blocked) {
+    if (merged.length && z.s <= merged[merged.length-1].e)
+      merged[merged.length-1].e = Math.max(merged[merged.length-1].e, z.e);
+    else merged.push({s: z.s, e: z.e});
+  }
+
+  // Scan at 30-min increments for free 60-min windows
+  const slots = [];
+  const meetMs = MEET_MIN * 60000;
+  let t = ws;
+  while (t + meetMs <= we) {
+    const te = t + meetMs;
+    if (!merged.some(z => t < z.e && te > z.s))
+      slots.push({ start: new Date(t), end: new Date(te) });
+    t += 30 * 60000;
+  }
+  return slots;
+}
+
+// ─────────────────────────────────────────────────────────────
+// INIT
+// ─────────────────────────────────────────────────────────────
+function init() {
+  S.loading = true; S.error = null;
+  renderCal();
+
+  const days = getWeekDays();
+  S.slots = {};
+
+  for (const d of days) {
+    const key = dkey(d);
+    const busy = [];
+
+    // Always block 9–10 AM EDT (13:00–14:00 UTC) — no buffer
+    busy.push({
+      noBuffer: true,
+      start: new Date(d.getTime() + 13 * 3600000),
+      end:   new Date(d.getTime() + 14 * 3600000)
+    });
+
+    // Add real calendar events for this date if we have them
+    if (CALENDAR_DATA[key]) {
+      for (const ev of CALENDAR_DATA[key]) {
+        busy.push({ start: new Date(ev.s), end: new Date(ev.e) });
+      }
+    }
+
+    S.slots[key] = computeSlots(d, busy);
+  }
+
+  S.loading = false;
+  renderCal();
+}
+
+// ─────────────────────────────────────────────────────────────
+// RENDER: CALENDAR
+// ─────────────────────────────────────────────────────────────
+function renderCal() {
+  const el  = document.getElementById('week-body');
+  const lbl = document.getElementById('week-label');
+
+  const strip = document.getElementById('live-strip-txt');
+
+  if (S.loading) {
+    el.innerHTML = `<div class="loading-state"><div class="spin"></div><div>Loading availability…</div></div>`;
+    lbl.textContent = 'Checking calendar…'; return;
+  }
+  if (S.error) {
+    el.innerHTML = `<div class="error-state">${h(S.error)}</div>`; return;
+  }
+
+  if (strip) {
+    strip.textContent = `Real availability · 9 AM – 5 PM Eastern · updated ${LAST_REFRESHED}`;
+  }
+
+  const days = getWeekDays();
+  const f = days[0], la = days[4];
+  lbl.textContent = `Week of ${MONTHS_S[f.getUTCMonth()]} ${f.getUTCDate()} – ${la.getUTCDate()}, ${f.getUTCFullYear()}`;
+
+  let html = `<div class="week-cols">`;
+  for (const day of days) {
+    const key = dkey(day);
+    const slots = S.slots[key] || [];
+    html += `<div class="day-col">
+      <div class="day-head">
+        <div class="day-name">${DAYS[day.getUTCDay()]}</div>
+        <div class="day-num">${day.getUTCDate()}</div>
+        <div class="day-mo">${MONTHS_S[day.getUTCMonth()]}</div>
+      </div>`;
+
+    if (!slots.length) {
+      html += `<div class="no-sl-msg">No open slots</div>`;
+    } else {
+      for (const slot of slots) {
+        const iso    = slot.start.toISOString();
+        const is1    = S.slot1 && S.slot1.start.toISOString() === iso;
+        const is2    = S.slot2 && S.slot2.start.toISOString() === iso;
+        const isUsed = S.booked.has(iso);
+        const cls    = 'sl' + (isUsed ? ' used' : is1 ? ' sel1' : is2 ? ' sel2' : '');
+        const label  = `${fmtTime(slot.start, S.tz)} – ${fmtTime(slot.end, S.tz)}`;
+        const badge  = is1 ? '<br><span style="font-size:10px;letter-spacing:.3px">1ST CHOICE ✓</span>'
+                     : is2 ? '<br><span style="font-size:10px;letter-spacing:.3px">2ND CHOICE ✓</span>' : '';
+        html += isUsed
+          ? `<button class="${cls}" disabled>${label}</button>`
+          : `<button class="${cls}" onclick="pickSlot('${iso}')">${label}${badge}</button>`;
+      }
+    }
+    html += `</div>`;
+  }
+  html += `</div>`;
+  el.innerHTML = html;
+}
+
+// ─────────────────────────────────────────────────────────────
+// SLOT SELECTION
+// ─────────────────────────────────────────────────────────────
+function pickSlot(iso) {
+  let found = null;
+  for (const key of Object.keys(S.slots)) {
+    found = S.slots[key].find(s => s.start.toISOString() === iso);
+    if (found) break;
+  }
+  if (!found) return;
+
+  const is1 = S.slot1 && S.slot1.start.toISOString() === iso;
+  const is2 = S.slot2 && S.slot2.start.toISOString() === iso;
+
+  if      (is1)     { S.slot1 = S.slot2 || null; S.slot2 = null; }
+  else if (is2)     { S.slot2 = null; }
+  else if (!S.slot1){ S.slot1 = found; }
+  else if (!S.slot2){ S.slot2 = found; }
+  else              { S.slot2 = found; }
+
+  if (S.slot1 || S.slot2) S.step = 'form';
+  renderCal(); renderForm(); updateTimeDisp();
+}
+
+function updateTimeDisp() {
+  const el = document.getElementById('sel-time-disp');
+  if (!el) return;
+  if (!S.slot1) { el.textContent = '← Select up to 2 time slots'; return; }
+  let txt = `1st: ${fmtTime(S.slot1.start, S.tz)} – ${fmtTime(S.slot1.end, S.tz)} ${S.tz} · ${fmtDateLong(S.slot1.start, S.tz).split(',')[0]}`;
+  if (S.slot2) txt += ` · 2nd: ${fmtTime(S.slot2.start, S.tz)} ${S.tz}`;
+  el.textContent = txt;
+}
+
+function onTzChange(tz) {
+  S.tz = tz;
+  renderCal();
+  if (S.step === 'form')    { renderForm();    updateTimeDisp(); }
+  if (S.step === 'confirm') { renderConfirm(); updateTimeDisp(); }
+  if (S.slot1) updateTimeDisp();
+}
+
+// ─────────────────────────────────────────────────────────────
+// RENDER: FORM
+// ─────────────────────────────────────────────────────────────
+function renderForm() {
+  const area = document.getElementById('form-area');
+  const tdEl = document.getElementById('sel-time-disp');
+  if (!S.slot1) {
+    area.innerHTML = `<div class="prompt"><div class="prompt-ico">🗓</div><p>Select your <strong>1st choice</strong> time slot, then optionally a <strong>2nd choice</strong>. Fill in your details to submit.</p></div>`;
+    tdEl.textContent = '← Select up to 2 time slots'; return;
+  }
+  updateTimeDisp();
+
+  const s1 = `${fmtDateLong(S.slot1.start, S.tz)}, ${fmtTime(S.slot1.start, S.tz)} – ${fmtTime(S.slot1.end, S.tz)} ${S.tz}`;
+  const s2 = S.slot2 ? `${fmtDateLong(S.slot2.start, S.tz)}, ${fmtTime(S.slot2.start, S.tz)} – ${fmtTime(S.slot2.end, S.tz)} ${S.tz}` : 'Not selected';
+
+  area.innerHTML = `
+    <div class="form-body">
+      <div class="fg">
+        <label>1st Choice Time</label>
+        <input class="ro" type="text" value="${h(s1)}" readonly>
+      </div>
+      <div class="fg">
+        <label>2nd Choice Time <span style="font-weight:400;text-transform:none;font-size:11px;color:var(--muted)">(optional)</span></label>
+        <input class="ro" type="text" value="${h(s2)}" readonly style="${S.slot2 ? '' : 'color:var(--muted);font-style:italic'}">
+      </div>
+      <div class="fg">
+        <label>Company Name *</label>
+        <input type="text" id="f-co" placeholder="Your company name" oninput="chkForm()">
+      </div>
+      <div class="fg">
+        <label>Your Name *</label>
+        <input type="text" id="f-nm" placeholder="Full name" oninput="chkForm()">
+      </div>
+      <div class="fg">
+        <label>Your Email *</label>
+        <input type="email" id="f-em" placeholder="you@yourcompany.com" oninput="chkForm()">
+      </div>
+      <div class="fg">
+        <label>Purpose of Meeting *</label>
+        <textarea id="f-pu" placeholder="What would you like to discuss?" oninput="chkForm()"></textarea>
+      </div>
+      <button class="btn-primary" id="sub-btn" disabled onclick="doBook()">
+        ✉️ Submit Meeting Request
+      </button>
+      <div class="form-note">Your request will be sent directly to Nikki, who will confirm a time and send a Teams invite.</div>
+    </div>`;
+}
+
+function chkForm() {
+  const btn = document.getElementById('sub-btn');
+  if (!btn) return;
+  const filled = ['f-co','f-nm','f-em','f-pu'].every(id => {
+    const el = document.getElementById(id);
+    return el && el.value.trim().length > 0;
+  });
+  const emEl = document.getElementById('f-em');
+  const emailValid = emEl && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emEl.value.trim());
+  btn.disabled = !(filled && emailValid && S.slot1);
+}
+
+// ─────────────────────────────────────────────────────────────
+// SUBMIT — sends email automatically via Web3Forms
+// ─────────────────────────────────────────────────────────────
+async function doBook() {
+  const co = document.getElementById('f-co')?.value.trim();
+  const nm = document.getElementById('f-nm')?.value.trim();
+  const em = document.getElementById('f-em')?.value.trim();
+  const pu = document.getElementById('f-pu')?.value.trim();
+  if (!co || !nm || !em || !pu || !S.slot1) return;
+
+  // Show sending state
+  const btn = document.getElementById('sub-btn');
+  btn.disabled = true;
+  btn.innerHTML = '<div class="spin" style="width:16px;height:16px;margin:0;border-width:2px;display:inline-block"></div>&nbsp; Sending…';
+
+  const fmt1 = `${fmtDateLong(S.slot1.start, S.tz)}, ${fmtTime(S.slot1.start, S.tz)} – ${fmtTime(S.slot1.end, S.tz)} ${S.tz}`;
+  const fmt2 = S.slot2 ? `${fmtDateLong(S.slot2.start, S.tz)}, ${fmtTime(S.slot2.start, S.tz)} – ${fmtTime(S.slot2.end, S.tz)} ${S.tz}` : 'Not selected';
+
+  const msgBody = [
+    `Hi Nikki,`,
+    ``,
+    `You have a new meeting request.`,
+    ``,
+    `CUSTOMER DETAILS`,
+    `Name:        ${nm}`,
+    `Company:     ${co}`,
+    `Email:       ${em}`,
+    `Purpose:     ${pu}`,
+    ``,
+    `PREFERRED TIMES`,
+    `1st Choice:  ${fmt1}`,
+    `2nd Choice:  ${fmt2}`,
+    ``,
+    `Please confirm one of the times and send ${nm} a Teams invite at ${em}.`,
+    `Suggested title: ${co} | ND - ${pu}`
+  ].join('\n');
+
+  const fd = new FormData();
+  fd.append('access_key', WEB3FORMS_KEY);
+  fd.append('subject',    `Meeting Request: ${co} | ND - ${pu}`);
+  fd.append('from_name',  'Custom Booking Request');
+  fd.append('email',      em);   // customer's email becomes the reply-to
+  fd.append('message',    msgBody);
+
+  try {
+    const res  = await fetch('https://api.web3forms.com/submit', { method: 'POST', body: fd });
+    const data = await res.json();
+
+    if (data.success) {
+      S.confirmData = { co, nm, em, pu, slot1: S.slot1, slot2: S.slot2 };
+      S.booked.add(S.slot1.start.toISOString());
+      if (S.slot2) S.booked.add(S.slot2.start.toISOString());
+      S.slot1 = null; S.slot2 = null;
+      S.step = 'confirm';
+      renderCal();
+      renderConfirm();
+    } else {
+      btn.disabled = false;
+      btn.innerHTML = '✉️ Submit Meeting Request';
+      alert('There was a problem sending your request. Please try again or email nikki.patel@netdocuments.com directly.');
+      console.error('Web3Forms error:', data);
+    }
+  } catch (err) {
+    btn.disabled = false;
+    btn.innerHTML = '✉️ Submit Meeting Request';
+    alert('Network error. Please check your connection and try again.');
+    console.error('Fetch error:', err);
+  }
+}
+
+// ─────────────────────────────────────────────────────────────
+// RENDER: CONFIRMATION
+// ─────────────────────────────────────────────────────────────
+function renderConfirm() {
+  const area = document.getElementById('form-area');
+  if (!S.confirmData) return;
+  const {co, nm, em, pu, slot1, slot2} = S.confirmData;
+
+  const fmt1 = `${fmtDateLong(slot1.start, S.tz)}, ${fmtTime(slot1.start, S.tz)} – ${fmtTime(slot1.end, S.tz)} ${S.tz}`;
+  const fmt2 = slot2 ? `${fmtDateLong(slot2.start, S.tz)}, ${fmtTime(slot2.start, S.tz)} – ${fmtTime(slot2.end, S.tz)} ${S.tz}` : null;
+  updateTimeDisp();
+
+  area.innerHTML = `
+    <div class="confirm">
+      <div class="check-ico">✅</div>
+      <h3>Request Sent!</h3>
+      <div class="sub">Nikki has been notified and will confirm a time and send a Teams invite.</div>
+      <div class="meet-sum">
+        <div class="srow"><span class="slbl">Company</span><span class="sval">${h(co)}</span></div>
+        <div class="srow"><span class="slbl">Name</span><span class="sval">${h(nm)}</span></div>
+        <div class="srow"><span class="slbl">Email</span><span class="sval">${h(em)}</span></div>
+        <div class="srow"><span class="slbl">Purpose</span><span class="sval">${h(pu)}</span></div>
+        <div class="srow"><span class="slbl">1st Choice</span><span class="sval" style="color:var(--nd-blue);font-weight:800">${fmt1}</span></div>
+        ${fmt2 ? `<div class="srow"><span class="slbl">2nd Choice</span><span class="sval" style="color:#6b9aef;font-weight:700">${fmt2}</span></div>` : ''}
+      </div>
+      <div class="hr"></div>
+      <button class="btn-ghost" onclick="bookAgain()">← Submit Another Request</button>
+    </div>`;
+}
+
+function bookAgain() {
+  S.slot1 = null; S.slot2 = null; S.step = 'select'; S.confirmData = null;
+  document.getElementById('sel-time-disp').textContent = '← Select up to 2 time slots';
+  renderForm(); renderCal();
+}
+
+// ─────────────────────────────────────────────────────────────
+// UTILS
+// ─────────────────────────────────────────────────────────────
+function h(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// ─────────────────────────────────────────────────────────────
+// GO
+// ─────────────────────────────────────────────────────────────
+init();
+</script>
+</body>
+</html>
