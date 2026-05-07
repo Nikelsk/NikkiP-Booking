@@ -607,11 +607,13 @@ function renderForm() {
 function chkForm() {
   const btn = document.getElementById('sub-btn');
   if (!btn) return;
-  const ok = ['f-co','f-nm','f-em','f-pu'].every(id => {
+  const filled = ['f-co','f-nm','f-em','f-pu'].every(id => {
     const el = document.getElementById(id);
     return el && el.value.trim().length > 0;
-  }) && S.slot1;
-  btn.disabled = !ok;
+  });
+  const emEl = document.getElementById('f-em');
+  const emailValid = emEl && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emEl.value.trim());
+  btn.disabled = !(filled && emailValid && S.slot1);
 }
 
 // ─────────────────────────────────────────────────────────────
